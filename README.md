@@ -44,7 +44,7 @@ Please read [CONTRIBUTING.md](#) for details on our code of conduct, and the pro
 
 ## Authors
 
-- **Your Name** - _Initial work_ - [AndzieM347](https://github.com/Andzie-M347)
+- **Andzisi Mabaso** - _Initial work_ - [AndzieM347](https://github.com/Andzie-M347)
 
 ## License
 
