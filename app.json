@@ -1,0 +1,49 @@
+{
+  "expo": {
+    "name": "Panda TV+",
+    "slug": "pandatvrsa",
+    "version": "1.2.3",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/SplashScreen.png",
+      "resizeMode": "cover",
+      "backgroundColor": "#ffffff"
+    },
+    "updates": {
+      "fallbackToCacheTimeout": 0
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.panda.tv",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Panda TV Would Like to Access Your Photos - This app requires access to the photo library to upload your profile photo."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FFFFFF"
+      },
+      "package": "com.panda.tv.za"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "color": "#ffffff"
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "85404370-b36d-498e-912c-7b444bc16068"
+      }
+    }
+  }
+}
