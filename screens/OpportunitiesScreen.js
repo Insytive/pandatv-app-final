@@ -112,7 +112,7 @@ const OpportunitiesScreen = ({ children }) => {
       </View>
 
       {/* bottom section */}
-      <View style={styles.container}>
+      <View className="w-full bg-white px-4 py-6 rounded-t-[50px] flex-1 -mt-10">
         <View style={styles.tabs}>
           <TouchableOpacity
             style={[styles.tab, activeTab === "internal" && styles.activeTab]}
@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-around",
     padding: 10,
-    backgroundColor: "#f0f0f0",
+    // backgroundColor: "#f0f0f0",
   },
   tab: {
     padding: 10,
