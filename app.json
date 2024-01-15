@@ -12,9 +12,12 @@
       "backgroundColor": "#ffffff"
     },
     "updates": {
-      "fallbackToCacheTimeout": 0
+      "fallbackToCacheTimeout": 0,
+      "url": "https://u.expo.dev/85404370-b36d-498e-912c-7b444bc16068"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.panda.tv",
@@ -38,12 +41,21 @@
         {
           "color": "#ffffff"
         }
+      ],
+      [
+        "expo-updates",
+        {
+          "username": "kylemabaso"
+        }
       ]
     ],
     "extra": {
       "eas": {
         "projectId": "85404370-b36d-498e-912c-7b444bc16068"
       }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
     }
   }
 }

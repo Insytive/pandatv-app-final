@@ -11,6 +11,7 @@ import { MenuProvider } from "react-native-popup-menu";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { ToastProvider } from "react-native-toast-notifications";
+import * as Updates from "expo-updates";
 
 LogBox.ignoreLogs(["AsyncStorage has been extracted"]);
 // AsyncStorage.clear();
@@ -19,6 +20,24 @@ SplashScreen.preventAutoHideAsync();
 
 export default function App() {
   const [appIsLoaded, setAppIsLoaded] = useState(false);
+
+  async function onFetchUpdateAsync() {
+    try {
+      const update = await Updates.checkForUpdateAsync();
+
+      if (update.isAvailable) {
+        await Updates.fetchUpdateAsync();
+        await Updates.reloadAsync();
+      }
+    } catch (error) {
+      // You can also add an alert() to see the error message in case of an error when fetching updates.
+      alert(`Error fetching latest Expo update: ${error}`);
+    }
+  }
+
+  useEffect(() => {
+    onFetchUpdateAsync();
+  }, []);
 
   useEffect(() => {
     const prepare = async () => {
