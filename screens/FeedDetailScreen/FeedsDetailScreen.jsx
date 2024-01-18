@@ -7,6 +7,9 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   FlatList,
+  KeyboardAvoidingView,
+  Platform,
+  Alert,
 } from "react-native";
 import { useIsFocused } from "@react-navigation/native";
 import { FontAwesome5, Ionicons, MaterialIcons } from "@expo/vector-icons";
@@ -17,13 +20,12 @@ import { useDispatch, useSelector } from "react-redux";
 import { RepliesList } from "../../components/RepliesList/RepliesCard";
 
 import { loveFeed, unloveFeed } from "../../store/feedsSlice";
+import { Keyboard } from "react-native";
 
 const FeedDetailScreen = ({ route, navigation }) => {
   // console.log("ROUTE:: ", route.params);
   const toast = useToast();
   const userData = useSelector((state) => state.auth.userData);
-
-  const { lovedByUser } = useSelector((state) => state.feeds);
 
   // console.log("Loved by user: ", lovedByUser);
 
@@ -74,8 +76,11 @@ const FeedDetailScreen = ({ route, navigation }) => {
 
       setReplies((currentReplies) => [newReply, ...currentReplies]);
       setReply("");
+      // Dismiss the keyboard
+      Keyboard.dismiss();
     } catch (error) {
       console.error("Error sending reply:", error);
+      Alert.alert("Error", "Error sending reply. Please try again later.");
     } finally {
       setIsLoading(false);
     }
@@ -127,6 +132,11 @@ const FeedDetailScreen = ({ route, navigation }) => {
         </View>
 
         <View className="w-full bg-white  py-6 rounded-t-[50px] flex-1 -mt-10">
+          <View style={styles.header}>
+            <TouchableOpacity onPress={() => navigation.goBack()}>
+              <Ionicons name="close-outline" size={24} color="black" />
+            </TouchableOpacity>
+          </View>
           <View className="px-4" style={styles.tweetHeader}>
             <Image source={{ uri: feed.user.avatar }} style={styles.avatar} />
 
@@ -190,19 +200,25 @@ const FeedDetailScreen = ({ route, navigation }) => {
           </View>
 
           {/* Replies section */}
-          {isLoading ? (
-            <ActivityIndicator size="small" color="#f45008" />
-          ) : (
-            <View style={styles.repliesContainer}>
-              <FlatList
-                data={replies}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                  <RepliesList replies={item} navigation={navigation} />
-                )}
-              />
-            </View>
-          )}
+          <KeyboardAvoidingView
+            style={{ flex: 1 }}
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            keyboardVerticalOffset={Platform.OS === "ios" ? 24 : 0}
+          >
+            {isLoading ? (
+              <ActivityIndicator size="small" color="#f45008" />
+            ) : (
+              <View style={styles.repliesContainer}>
+                <FlatList
+                  data={replies}
+                  keyExtractor={(item) => item.id}
+                  renderItem={({ item }) => (
+                    <RepliesList replies={item} navigation={navigation} />
+                  )}
+                />
+              </View>
+            )}
+          </KeyboardAvoidingView>
         </View>
       </View>
     </React.Fragment>

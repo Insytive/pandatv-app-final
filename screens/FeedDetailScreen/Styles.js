@@ -82,6 +82,12 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     backgroundColor: "#f0f0f0",
   },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 16,
+  },
   tweetButton: {
     backgroundColor: "#f45008",
     paddingVertical: 8,

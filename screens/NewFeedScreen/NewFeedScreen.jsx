@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Keyboard,
 } from "react-native";
 import { MaterialIcons, Ionicons, Entypo } from "@expo/vector-icons";
 import { useSelector } from "react-redux";
@@ -18,6 +19,7 @@ import { ProgressBar } from "../../components/ProgressBar";
 
 import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system";
+import { useFocusEffect } from "@react-navigation/native";
 
 const baseApiUrl = "https://admin.pandatv.co.za/api";
 
@@ -124,8 +126,6 @@ const NewFeedScreen = ({ navigation }) => {
         ),
       });
 
-      console.log(response.data);
-
       navigation.goBack();
 
       setFeedContent("");
@@ -138,6 +138,8 @@ const NewFeedScreen = ({ navigation }) => {
         animationType: "slide-in",
       });
     } finally {
+      // Dismiss the keyboard
+      Keyboard.dismiss();
       setIsLoading(false);
     }
   };
@@ -161,6 +163,17 @@ const NewFeedScreen = ({ navigation }) => {
     }
   };
 
+  useFocusEffect(
+    React.useCallback(() => {
+      // No operation on focus
+
+      return () => {
+        // Dismiss keyboard when screen loses focus
+        Keyboard.dismiss();
+      };
+    }, [])
+  );
+
   const MAX_LENGTH = 280;
 
   return (
@@ -183,70 +196,62 @@ const NewFeedScreen = ({ navigation }) => {
           style={styles.container}
           keyboardVerticalOffset={100}
         > */}
-          <View style={styles.header}>
-            <TouchableOpacity onPress={() => navigation.goBack()}>
-              <Ionicons name="close-outline" size={24} color="black" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.postButton}
-              onPress={feedPostHandler}
-            >
-              <Text style={styles.postButtonText}>
-                {isLoading ? (
-                  <ActivityIndicator size="small" color="#fff" />
-                ) : (
-                  " Post"
-                )}
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.composeContainer}>
-            <Image
-              source={{ uri: userData?.photo_url }}
-              style={styles.avatar}
-            />
-
-            <TextInput
-              style={styles.input}
-              placeholder="Share your thoughts..."
-              multiline
-              value={feedContent}
-              onChangeText={setFeedContent}
-              maxLength={MAX_LENGTH}
-            />
-          </View>
-
-          {selectedImage && (
-            <>
-              <Image
-                source={{ uri: selectedImage?.uri }}
-                style={styles.thumbnail}
-                onError={(e) => console.log(e.nativeEvent.error)}
-              />
-            </>
-          )}
-
-          <View style={styles.footer}>
-            <TouchableOpacity
-              style={styles.iconButton}
-              onPress={openImagePickerAsync}
-            >
-              <Entypo name="image" size={24} color="#f45008" />
-            </TouchableOpacity>
-
-            <ProgressBar
-              value={feedContent.length}
-              maxValue={MAX_LENGTH}
-              size={24}
-              strokeWidth={3}
-            />
-          </View>
-          <View style={styles.counterWrapper}>
-            <Text style={styles.counter}>
-              {MAX_LENGTH - feedContent.length}
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()}>
+            <Ionicons name="close-outline" size={24} color="black" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.postButton} onPress={feedPostHandler}>
+            <Text style={styles.postButtonText}>
+              {isLoading ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                " Post"
+              )}
             </Text>
-          </View>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.composeContainer}>
+          <Image source={{ uri: userData?.photo_url }} style={styles.avatar} />
+
+          <TextInput
+            style={styles.input}
+            placeholder="Share your thoughts..."
+            multiline
+            value={feedContent}
+            onChangeText={setFeedContent}
+            maxLength={MAX_LENGTH}
+          />
+        </View>
+
+        {selectedImage && (
+          <>
+            <Image
+              source={{ uri: selectedImage?.uri }}
+              style={styles.thumbnail}
+              onError={(e) => console.log(e.nativeEvent.error)}
+            />
+          </>
+        )}
+
+        <View style={styles.footer}>
+          <TouchableOpacity
+            style={styles.iconButton}
+            onPress={openImagePickerAsync}
+          >
+            <Entypo name="image" size={24} color="#f45008" />
+          </TouchableOpacity>
+
+          <ProgressBar
+            value={feedContent.length}
+            maxValue={MAX_LENGTH}
+            size={24}
+            strokeWidth={3}
+          />
+        </View>
+        <View style={styles.counterWrapper}>
+          <Text style={styles.counter}>{MAX_LENGTH - feedContent.length}</Text>
+        </View>
         {/* </KeyboardAvoidingView> */}
       </View>
     </View>

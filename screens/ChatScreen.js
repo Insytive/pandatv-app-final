@@ -151,7 +151,7 @@ const ChatScreen = (props) => {
       setReplyingTo(null);
     } catch (error) {
       console.log("ERROR SENDING MSG", error.message);
-
+      setMessageText("");
       // if (error) {
       //   setErrorBannerText("Message failed to send");
       //   setTimeout(() => setErrorBannerText(""), 5000);

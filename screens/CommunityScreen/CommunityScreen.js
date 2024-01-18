@@ -101,13 +101,13 @@ const CommunityScreen = ({ navigation }) => {
     }
   }, [dispatch, userData, feeds.length, isFocused]);
 
-  useFocusEffect(
-    React.useCallback(() => {
-      return () => {
-        setIsBottomSheetVisible(false);
-      };
-    }, [])
-  );
+  // useFocusEffect(
+  //   React.useCallback(() => {
+  //     return () => {
+  //       setIsBottomSheetVisible(false);
+  //     };
+  //   }, [])
+  // );
 
   const handleLove = (id) => {
     dispatch(loveFeed({ id, userData }));
