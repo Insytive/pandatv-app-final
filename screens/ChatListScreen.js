@@ -14,7 +14,7 @@ import CustomHeaderButton from "../components/CustomHeaderButton";
 import DataItem from "../components/DataItem";
 import colors from "../constants/colors";
 import Logo from "../assets/images/4.png";
-import { Feather, Ionicons } from "@expo/vector-icons";
+import { Feather, Ionicons, MaterialIcons } from "@expo/vector-icons";
 import UserImage from "../assets/images/user.png";
 
 const ChatListScreen = (props) => {
@@ -141,9 +141,16 @@ const ChatListScreen = (props) => {
                 );
                 const otherUser = storedUsers[otheruid];
 
+
+
                 if (!otherUser) return;
 
+                const isVerified = otherUser.email && otherUser.email.includes('skillspanda');
+
+
                 title = `${otherUser.firstName} ${otherUser.lastName}`;
+                verifiedIcon = isVerified ? <MaterialIcons name="verified" size={16} color="#056526" /> : null;
+
                 image = otherUser.photo_url;
               }
 
@@ -151,6 +158,7 @@ const ChatListScreen = (props) => {
                 <DataItem
                   title={title}
                   subTitle={subTitle}
+                  verifiedIcon={verifiedIcon}
                   image={image}
                   onPress={() =>
                     props.navigation.navigate("ChatScreen", { chatId })

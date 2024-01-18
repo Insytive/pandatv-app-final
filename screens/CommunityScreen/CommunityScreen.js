@@ -236,37 +236,37 @@ const CommunityScreen = ({ navigation }) => {
       </View>
 
       <View className="w-full bg-white px-4 py-6 rounded-t-[50px] flex-1 -mt-10">
-        <KeyboardAvoidingView
+        {/* <KeyboardAvoidingView
           className="flex-1"
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           keyboardVerticalOffset={180}
-        >
-          <>
-            <View>
-              {loading ? (
-                <ActivityIndicator Size="small" Color="#f45008" />
-              ) : (
-                <FlatList
-                  data={feeds}
-                  keyExtractor={(item) => item.id}
-                  renderItem={({ item }) => (
-                    <FeedsCard
-                      feeds={item}
-                      navigation={navigation}
-                      onSelect={() => checkUserLoved(item.id)}
-                      onHeartPress={() =>
-                        item.lovedByUser
-                          ? handleUnlove(item.id)
-                          : handleLove(item.id)
-                      }
-                      onOptionsPress={() => bottomSheetHandler(item.id, item)}
-                    />
-                  )}
-                />
-              )}
-            </View>
-          </>
-        </KeyboardAvoidingView>
+        > */}
+        <>
+          <View>
+            {loading ? (
+              <ActivityIndicator Size="small" Color="#f45008" />
+            ) : (
+              <FlatList
+                data={feeds}
+                keyExtractor={(item) => item.id}
+                renderItem={({ item }) => (
+                  <FeedsCard
+                    feeds={item}
+                    navigation={navigation}
+                    onSelect={() => checkUserLoved(item.id)}
+                    onHeartPress={() =>
+                      item.lovedByUser
+                        ? handleUnlove(item.id)
+                        : handleLove(item.id)
+                    }
+                    onOptionsPress={() => bottomSheetHandler(item.id, item)}
+                  />
+                )}
+              />
+            )}
+          </View>
+        </>
+        {/* </KeyboardAvoidingView> */}
       </View>
 
       {/* Floating button */}

@@ -178,11 +178,11 @@ const NewFeedScreen = ({ navigation }) => {
       </View>
 
       <View className="w-full px-4  bg-white py-6 rounded-t-[50px] flex-1 -mt-10">
-        <KeyboardAvoidingView
+        {/* <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={styles.container}
           keyboardVerticalOffset={100}
-        >
+        > */}
           <View style={styles.header}>
             <TouchableOpacity onPress={() => navigation.goBack()}>
               <Ionicons name="close-outline" size={24} color="black" />
@@ -247,7 +247,7 @@ const NewFeedScreen = ({ navigation }) => {
               {MAX_LENGTH - feedContent.length}
             </Text>
           </View>
-        </KeyboardAvoidingView>
+        {/* </KeyboardAvoidingView> */}
       </View>
     </View>
   );

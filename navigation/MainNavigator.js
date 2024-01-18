@@ -37,6 +37,7 @@ import FeedDetailScreen from "../screens/FeedDetailScreen/FeedsDetailScreen";
 import NewFeedScreen from "../screens/NewFeedScreen/NewFeedScreen";
 import EditFeedScreen from "../screens/EditFeedScreen/EditFeedScreen";
 import LocalOpportunityScreen from "../screens/LocalOpportunityScreen";
+import axios from "axios";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -197,7 +198,7 @@ const MainNavigator = (props) => {
   const storedUsers = useSelector((state) => state.users.storedUsers);
 
   const [expoPushToken, setExpoPushToken] = useState("");
-  console.log(expoPushToken);
+  // console.log("EXPO TOKEN", expoPushToken);
   const notificationListener = useRef();
   const responseListener = useRef();
 
@@ -229,6 +230,35 @@ const MainNavigator = (props) => {
         notificationListener.current
       );
       Notifications.removeNotificationSubscription(responseListener.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    // Push notifications from the server
+    axios.post(
+      "https://admin.pandatc.co.za/api/exponent/devices/subscribe",
+      {
+        token: expoPushToken,
+      },
+      {
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+
+    // Cleanup function
+    return () => {
+      fetch("https://admin.pandatc.co.za/api/exponent/devices/unsubscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: expoPushToken }),
+      })
+        .then((response) => {
+          console.log(response.data);
+          console.log("Unsubscribed successfully");
+        })
+        .catch((error) => {
+          console.error("Error during unsubscription:", error);
+        });
     };
   }, []);
 

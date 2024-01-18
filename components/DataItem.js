@@ -8,7 +8,7 @@ const imageSize = 40;
 
 const DataItem = props => {
 
-    const { title, subTitle, image, type, isChecked, icon } = props;
+    const { title, subTitle, image, type, isChecked, icon, verifiedIcon } = props;
 
     const hideImage = props.hideImage && props.hideImage === true;
 
@@ -37,7 +37,7 @@ const DataItem = props => {
                     <Text
                         numberOfLines={1}
                         style={{ ...styles.title, ...{ color: type === "button" ? colors.blue : colors.textColor } }}>
-                        {title}
+                        {title} {verifiedIcon}
                     </Text>
 
                     {
