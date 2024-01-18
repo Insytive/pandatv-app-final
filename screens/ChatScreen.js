@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  Button,
   ImageBackground,
   TextInput,
   TouchableOpacity,
@@ -41,6 +40,7 @@ import {
 import AwesomeAlert from "react-native-awesome-alerts";
 import { HeaderButtons, Item } from "react-navigation-header-buttons";
 import CustomHeaderButton from "../components/CustomHeaderButton";
+import UserImage from "../assets/images/user.png";
 
 const ChatScreen = (props) => {
   const [chatUsers, setChatUsers] = useState([]);
@@ -88,6 +88,15 @@ const ChatScreen = (props) => {
       otherUserData && `${otherUserData.firstName} ${otherUserData.lastName}`
     );
   };
+
+  const getOtherChatImage = () => {
+    const otheruid = chatUsers.find((uid) => uid !== userData.uid);
+    const otherUserData = storedUsers[otheruid];
+
+    return otherUserData?.photo_url ? otherUserData.photo_url : UserImage;
+  };
+
+  console.log("Image: ", getOtherChatImage());
 
   useEffect(() => {
     if (!chatData) return;
@@ -201,16 +210,6 @@ const ChatScreen = (props) => {
     }
   }, [isLoading, tempImageUri, chatId]);
 
-  // useEffect(() => {
-  //   const checkIfBlocked = async () => {
-  //     const blockedStatus = await isUserBlocked(userData, chatUsers);
-
-  //     setBlocked(blockedStatus);
-  //   };
-
-  //   checkIfBlocked();
-  // }, [userData, chatUsers]);
-
   return (
     <View className="flex-1">
       {/* top */}
@@ -224,7 +223,17 @@ const ChatScreen = (props) => {
           {/*  profile */}
           <View className="flex-row items-center justify-center space-x-3">
             <View className="w-12 h-12 rounded-full border border-white flex items-center justify-center">
-              <FontAwesome5 name="users" size={24} color="#fbfbfb" />
+              {chatData.isGroupChat ? (
+                <FontAwesome5 name="users" size={24} color="#fbfbfb" />
+              ) : (
+                <Image
+                  source={{
+                    uri: getOtherChatImage(),
+                  }}
+                  style={{ height: 40, width: 40, borderRadius: 20 }}
+                  resizeMode="cover"
+                />
+              )}
             </View>
 
             <View>

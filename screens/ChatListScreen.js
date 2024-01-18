@@ -131,6 +131,7 @@ const ChatListScreen = (props) => {
               let title = "";
               const subTitle = chatData.latestMessageText || "New chat";
               let image = "";
+              let verifiedIcon = null;
 
               if (isGroupChat) {
                 title = chatData.chatName;
@@ -141,15 +142,15 @@ const ChatListScreen = (props) => {
                 );
                 const otherUser = storedUsers[otheruid];
 
-
-
                 if (!otherUser) return;
 
-                const isVerified = otherUser.email && otherUser.email.includes('skillspanda');
-
+                const isVerified =
+                  otherUser.email && otherUser.email.includes("skillspanda");
 
                 title = `${otherUser.firstName} ${otherUser.lastName}`;
-                verifiedIcon = isVerified ? <MaterialIcons name="verified" size={16} color="#056526" /> : null;
+                verifiedIcon = isVerified ? (
+                  <MaterialIcons name="verified" size={16} color="#056526" />
+                ) : null;
 
                 image = otherUser.photo_url;
               }

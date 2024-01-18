@@ -235,31 +235,39 @@ const MainNavigator = (props) => {
 
   useEffect(() => {
     // Push notifications from the server
-    axios.post(
-      "https://admin.pandatc.co.za/api/exponent/devices/subscribe",
-      {
-        token: expoPushToken,
-      },
-      {
-        headers: { "Content-Type": "application/json" },
-      }
-    );
+    try {
+      const response = axios.post(
+        "https://admin.pandatc.co.za/api/exponent/devices/subscribe",
+        {
+          token: expoPushToken,
+        },
+        {
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+      // Handle successful response
+      console.log("Successfully subscribed:", response.data);
+    } catch (error) {
+      // Handle any errors here
+      console.error("Error while subscribing:", error);
+      // You can also handle specific error scenarios based on error.response or error.request
+    }
 
     // Cleanup function
-    return () => {
-      fetch("https://admin.pandatc.co.za/api/exponent/devices/unsubscribe", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token: expoPushToken }),
-      })
-        .then((response) => {
-          console.log(response.data);
-          console.log("Unsubscribed successfully");
-        })
-        .catch((error) => {
-          console.error("Error during unsubscription:", error);
-        });
-    };
+    // return () => {
+    //   fetch("https://admin.pandatc.co.za/api/exponent/devices/unsubscribe", {
+    //     method: "POST",
+    //     headers: { "Content-Type": "application/json" },
+    //     body: JSON.stringify({ token: expoPushToken }),
+    //   })
+    //     .then((response) => {
+    //       console.log(response.data);
+    //       console.log("Unsubscribed successfully");
+    //     })
+    //     .catch((error) => {
+    //       console.error("Error during unsubscription:", error);
+    //     });
+    // };
   }, []);
 
   useEffect(() => {
@@ -403,12 +411,17 @@ async function registerForPushNotificationsAsync() {
       finalStatus = status;
     }
     if (finalStatus !== "granted") {
-      alert("Failed to get push token for push notification!");
+      console.log("Failed to get push token for push notification!");
+      // alert("Failed to get push token for push notification!");
       return;
     }
-    token = (await Notifications.getExpoPushTokenAsync()).data;
+    token = await Notifications.getExpoPushTokenAsync({
+      projectId: "f30216c8-b445-48ed-8771-4677e43fe514",
+    });
+    // console.log(token);
   } else {
     console.log("Must use physical device for Push Notifications");
+    // alert("Must use physical device for Push Notifications");
   }
 
   return token;
