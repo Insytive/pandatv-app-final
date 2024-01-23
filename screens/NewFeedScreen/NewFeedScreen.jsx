@@ -126,6 +126,8 @@ const NewFeedScreen = ({ navigation }) => {
         ),
       });
 
+      // Dismiss the keyboard
+      Keyboard.dismiss();
       navigation.goBack();
 
       setFeedContent("");
@@ -138,8 +140,6 @@ const NewFeedScreen = ({ navigation }) => {
         animationType: "slide-in",
       });
     } finally {
-      // Dismiss the keyboard
-      Keyboard.dismiss();
       setIsLoading(false);
     }
   };

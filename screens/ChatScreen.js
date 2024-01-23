@@ -213,7 +213,7 @@ const ChatScreen = (props) => {
   return (
     <View className="flex-1">
       {/* top */}
-      <View className="w-full flex-row justify-around items-center bg-primary px-4 py-6 flex-[0.25]">
+      <View className="w-full flex-row justify-around items-center bg-primary px-4 py-6 ">
         <View className="flex-row items-center w-full py-12">
           {/* go back */}
           <TouchableOpacity onPress={() => props.navigation.goBack()}>
@@ -385,7 +385,7 @@ const ChatScreen = (props) => {
                 className="flex-1 h-8 text-base text-primaryText font-semibold"
                 value={messageText}
                 onChangeText={(text) => setMessageText(text)}
-                onSubmitEditing={sendMessage}
+                // onSubmitEditing={sendMessage}
               />
             </View>
 
