@@ -16,9 +16,12 @@ import { child, get, getDatabase, off, onValue, ref } from "firebase/database";
 import { setChatsData } from "../store/chatSlice";
 import {
   ActivityIndicator,
+  Alert,
   KeyboardAvoidingView,
   Platform,
+  SafeAreaView,
   StyleSheet,
+  Text,
   View,
 } from "react-native";
 import colors from "../constants/colors";
@@ -367,7 +370,12 @@ const MainNavigator = (props) => {
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
+           <SafeAreaView className="flex-1">
+           <Text> {expoPushToken}</Text>
+           </SafeAreaView>
+
       <StackNavigator />
+      {/* {Alert.alert("Token", expoPushToken)} */}
     </KeyboardAvoidingView>
   );
 };
@@ -420,6 +428,8 @@ async function registerForPushNotificationsAsync() {
     // Learn more about projectId:
     // https://docs.expo.dev/push-notifications/push-notifications-setup/#configure-projectid
     token = (await Notifications.getExpoPushTokenAsync({ projectId: 'f30216c8-b445-48ed-8771-4677e43fe514' })).data;
+
+    // setExpoPushToken(token);
     console.log(token);
   } else {
     alert('Must use physical device for Push Notifications');
