@@ -206,57 +206,83 @@ const MainNavigator = (props) => {
   const responseListener = useRef();
 
   useEffect(() => {
-    registerForPushNotificationsAsync().then(token => setExpoPushToken(token));
-
-    // registerForPushNotificationsAsync().then((token) =>
-    //   setExpoPushToken(token)
-    // );
-
-    notificationListener.current =
-      Notifications.addNotificationReceivedListener((notification) => {
-        // Handle received notification
-      });
-
-    responseListener.current =
-      Notifications.addNotificationResponseReceivedListener((response) => {
-        const { data } = response.notification.request.content;
-        const chatId = data["chatId"];
-
-        if (chatId) {
-          const pushAction = StackActions.push("ChatScreen", { chatId });
-          navigation.dispatch(pushAction);
-        } else {
-          console.log("No chat id sent with notification");
+    const registerForPushNotifications = async () => {
+      try {
+        if (Platform.OS === "android") {
+          await Notifications.setNotificationChannelAsync("default", {
+            name: "default",
+            importance: Notifications.AndroidImportance.MAX,
+            vibrationPattern: [0, 250, 250, 250],
+            lightColor: "#FF231F7C",
+          });
         }
-      });
+
+        const { status: existingStatus } = await Notifications.getPermissionsAsync();
+        let finalStatus = existingStatus;
+
+        if (existingStatus !== 'granted') {
+          const { status } = await Notifications.requestPermissionsAsync();
+          finalStatus = status;
+        }
+
+        if (finalStatus !== 'granted') {
+          console.log('Failed to get push token for push notification!');
+          return;
+        }
+
+        const token = (await Notifications.getExpoPushTokenAsync({ projectId: 'f30216c8-b445-48ed-8771-4677e43fe514' })).data;
+        console.log('Expo push token:', token);
+
+        // Send the push token to your server or perform other necessary actions
+        // For example:
+        // axios.post("YOUR_SERVER_ENDPOINT", { token });
+
+        setExpoPushToken(token);
+      } catch (error) {
+        console.error('Error registering for push notifications:', error);
+      }
+    };
+
+    registerForPushNotifications();
+
+    notificationListener.current = Notifications.addNotificationReceivedListener((notification) => {
+      // Handle received notification
+    });
+
+    responseListener.current = Notifications.addNotificationResponseReceivedListener((response) => {
+      const { data } = response.notification.request.content;
+      const chatId = data["chatId"];
+
+      if (chatId) {
+        const pushAction = StackActions.push("ChatScreen", { chatId });
+        navigation.dispatch(pushAction);
+      } else {
+        console.log("No chat id sent with notification");
+      }
+    });
 
     return () => {
-      Notifications.removeNotificationSubscription(
-        notificationListener.current
-      );
+      Notifications.removeNotificationSubscription(notificationListener.current);
       Notifications.removeNotificationSubscription(responseListener.current);
     };
   }, []);
 
   useEffect(() => {
-    // Push notifications from the server
-    try {
-      const response = axios.post(
-        "https://admin.pandatv.co.za/api/exponent/devices/subscribe",
-        {
-          token: expoPushToken,
-        },
-        {
-          headers: { "Content-Type": "application/json" },
-        }
-      );
-      // Handle successful response
-      console.log("Successfully subscribed:", response.data);
-    } catch (error) {
-      // Handle any errors here
-      console.error("Error while subscribing:", error);
-      // You can also handle specific error scenarios based on error.response or error.request
+    if (expoPushToken) {
+      // Subscribe to push notifications on your server
+      try {
+        const response = axios.post(
+          "https://admin.pandatv.co.za/api/exponent/devices/subscribe",
+          { token: expoPushToken },
+          { headers: { "Content-Type": "application/json" } }
+        );
+
+        console.log("Successfully subscribed:", response.data);
+      } catch (error) {
+        console.error("Error while subscribing:", error);
+      }
     }
+  }, [expoPushToken]);
 
     // Cleanup function
     // return () => {
@@ -273,7 +299,7 @@ const MainNavigator = (props) => {
     //       console.error("Error during unsubscription:", error);
     //     });
     // };
-  }, []);
+  
 
   useEffect(() => {
     console.log("Subscribing to firebase listeners");
