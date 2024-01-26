@@ -242,7 +242,7 @@ const MainNavigator = (props) => {
     // Push notifications from the server
     try {
       const response = axios.post(
-        "https://admin.pandatc.co.za/api/exponent/devices/subscribe",
+        "https://admin.pandatv.co.za/api/exponent/devices/subscribe",
         {
           token: expoPushToken,
         },
