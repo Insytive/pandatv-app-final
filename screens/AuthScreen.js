@@ -53,8 +53,8 @@ const AuthScreen = (props) => {
                   <Text className="text-base font-semibold text-primaryBold">
                     {`${
                       isSignUp
-                        ? "Have an account? sign in"
-                        : "Don't have an account?  sign up"
+                        ? "Have an account? Sign in"
+                        : "Don't have an account yet? Sign up"
                     }`}
                   </Text>
                 </TouchableOpacity>

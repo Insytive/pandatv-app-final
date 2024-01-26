@@ -8,20 +8,12 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1083096580008:android:30a7d26d2505ebcbe2a79d",
+        "mobilesdk_app_id": "1:1083096580008:android:41b76e2a2af30a6ce2a79d",
         "android_client_info": {
-          "package_name": "com.pandatv.co.za"
+          "package_name": "com.panda.tv.za"
         }
       },
       "oauth_client": [
-        {
-          "client_id": "1083096580008-84qlhdg19slft96m6okkc0fr4dlhktri.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.pandatv.co.za",
-            "certificate_hash": "9bbb3186b2189ef16d8f272bdab59362c395cbb4"
-          }
-        },
         {
           "client_id": "1083096580008-jkjq367m95kv9pkqq85055sq5c9tt5b4.apps.googleusercontent.com",
           "client_type": 3
@@ -43,7 +35,7 @@
               "client_id": "1083096580008-9osbl66hbiupa58m6rbl9vvsgrbtl0p6.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.pandatv.co.za"
+                "bundle_id": "com.panda.tv.za"
               }
             }
           ]
