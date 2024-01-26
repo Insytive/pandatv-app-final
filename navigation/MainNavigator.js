@@ -198,14 +198,16 @@ const MainNavigator = (props) => {
   const storedUsers = useSelector((state) => state.users.storedUsers);
 
   const [expoPushToken, setExpoPushToken] = useState("");
-  // console.log("EXPO TOKEN", expoPushToken);
+  console.log("EXPO TOKEN", expoPushToken);
   const notificationListener = useRef();
   const responseListener = useRef();
 
   useEffect(() => {
-    registerForPushNotificationsAsync().then((token) =>
-      setExpoPushToken(token)
-    );
+    registerForPushNotificationsAsync().then(token => setExpoPushToken(token));
+
+    // registerForPushNotificationsAsync().then((token) =>
+    //   setExpoPushToken(token)
+    // );
 
     notificationListener.current =
       Notifications.addNotificationReceivedListener((notification) => {
@@ -402,27 +404,27 @@ async function registerForPushNotificationsAsync() {
     });
   }
 
+
+
   if (Device.isDevice) {
-    const { status: existingStatus } =
-      await Notifications.getPermissionsAsync();
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
-    if (existingStatus !== "granted") {
+    if (existingStatus !== 'granted') {
       const { status } = await Notifications.requestPermissionsAsync();
       finalStatus = status;
     }
-    if (finalStatus !== "granted") {
-      console.log("Failed to get push token for push notification!");
-      // alert("Failed to get push token for push notification!");
+    if (finalStatus !== 'granted') {
+      alert('Failed to get push token for push notification!');
       return;
     }
-    token = await Notifications.getDevicePushTokenAsync({
-      projectId: "f30216c8-b445-48ed-8771-4677e43fe514",
-    });
-    // console.log(token);
+    // Learn more about projectId:
+    // https://docs.expo.dev/push-notifications/push-notifications-setup/#configure-projectid
+    token = (await Notifications.getExpoPushTokenAsync({ projectId: 'f30216c8-b445-48ed-8771-4677e43fe514' })).data;
+    console.log(token);
   } else {
-    console.log("Must use physical device for Push Notifications");
-    // alert("Must use physical device for Push Notifications");
+    alert('Must use physical device for Push Notifications');
   }
+
 
   return token;
 }
