@@ -1,6 +1,3 @@
-import * as Device from 'expo-device';
-import * as Notifications from 'expo-notifications';
-import Constants from 'expo-constants';
 import React, { useEffect, useRef, useState } from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
@@ -24,6 +21,7 @@ import {
   StyleSheet,
   Text,
   View,
+  Button,
 } from "react-native";
 import colors from "../constants/colors";
 import commonStyles from "../constants/commonStyles";
@@ -42,6 +40,18 @@ import NewFeedScreen from "../screens/NewFeedScreen/NewFeedScreen";
 import EditFeedScreen from "../screens/EditFeedScreen/EditFeedScreen";
 import LocalOpportunityScreen from "../screens/LocalOpportunityScreen";
 import axios from "axios";
+
+import * as Device from 'expo-device';
+import * as Notifications from 'expo-notifications';
+import Constants from 'expo-constants';
+// This will manage notifications when they are received in the foreground of the app
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,  // Should the notification be shown as alert
+    shouldPlaySound: false,  // Should a sound be played
+    shouldSetBadge: false,  // Should a badge count be set
+  }),
+});
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -192,15 +202,6 @@ const StackNavigator = () => {
   );
 };
 
-// This will manage notifications when they are received in the foreground of the app
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,  // Should the notification be shown as alert
-    shouldPlaySound: false,  // Should a sound be played
-    shouldSetBadge: false,  // Should a badge count be set
-  }),
-});
-
 // This function can be used to send test notifications:
 async function sendPushNotification(expoPushToken) {
   const message = {
@@ -224,35 +225,43 @@ async function sendPushNotification(expoPushToken) {
 
 // This function is used to ask for permissions and to get the Expo Push Token
 async function registerForPushNotificationsAsync() {
-  let token;
+  try {
+    let token;
 
-  if(Platform.OS === 'android') {
-    Notifications.setNotificationChannelAsync('default', {
-      name: 'default',
-      importance: Notifications.AndroidImportance.MAX,
-      vibrationPattern: [0, 250, 250, 250],
-      lightColor: '#FF231F7C',
-    });
-  }
-  if(Device.isDevice) {
-    const { status: existingStatus } = await Notifications.getPermissionsAsync();
-    let finalStatus = existingStatus;
-    if(existingStatus !== 'granted') {
-      const { status } = await Notifications.requestPermissionsAsync();
-      finalStatus = status;
+    if (Platform.OS === 'android') {
+      Notifications.setNotificationChannelAsync('default', {
+        name: 'default',
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: '#FF231F7C',
+      });
     }
-    if(finalStatus !== 'granted') {
-      alert('Failed to get push token for push notification!');
-      return;
+
+    if (Device.isDevice) {
+      const { status: existingStatus } = await Notifications.getPermissionsAsync();
+      let finalStatus = existingStatus;
+      if (existingStatus !== 'granted') {
+        const { status } = await Notifications.requestPermissionsAsync();
+        finalStatus = status;
+      }
+      if (finalStatus !== 'granted') {
+        alert('Failed to get push token for push notification!');
+        return null;
+      }
+      token = await Notifications.getExpoPushTokenAsync({
+        projectId: "85404370-b36d-498e-912c-7b444bc16068",
+      });
+      console.log(token);
+    } else {
+      alert('Must use a physical device for Push Notifications');
+      return null;
     }
-    token = await Notifications.getExpoPushTokenAsync({
-      projectId: Constants.expoConfig.extra.eas.projectId,
-    });
-    console.log(token);
-  } else {
-    alert('Must use physical device for Push Notifications');
+
+    return token?.data || null;
+  } catch (error) {
+    console.error("Error while registering for push notifications:", error);
+    return null;
   }
-  return token.data;
 }
 
 const MainNavigator = (props) => {
@@ -262,39 +271,47 @@ const MainNavigator = (props) => {
   const [isLoading, setIsLoading] = useState(true);
 
   const userData = useSelector((state) => state.auth.userData);
+  
+  // Add a null check before accessing 'uid'
+  const userId = userData ? userId : null;
+
   const storedUsers = useSelector((state) => state.users.storedUsers);
 
   const [expoPushToken, setExpoPushToken] = useState('');
-  console.log("EXPO TOKEN", expoPushToken);
+  const [notification, setNotification] = useState(false);
   const notificationListener = useRef();
   const responseListener = useRef();
 
   useEffect(() => {
+
     // Register for notifications
-    registerForPushNotificationsAsync().then(token => setExpoPushToken(token));
+    console.log("Registering for push notifications");
+    registerForPushNotificationsAsync().then(token => {
+      console.log("Expo Push Token: ", token);
+      setExpoPushToken(token)
+    }).catch(error => console.log("Error while registering for push notifications: ", error));
 
     // Listener for incoming notifications
-    notificationListener.current =
-        Notifications.addNotificationReceivedListener(notification => {
-          /* Here you might want to handle the notification when it arrives */
-        });
+    notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
+      /* Here you might want to handle the notification when it arrives */
+      setNotification(notification);
+    });
 
     // Listener for responses to notifications
-    responseListener.current =
-        Notifications.addNotificationResponseReceivedListener(response => {
-          /* Here you might want to handle user's response to a notification */
-          const { data } = response.notification.request.content;
-          const chatId = data["chatId"];
+    responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+      /* Here you might want to handle user's response to a notification */
+      const { data } = response.notification.request.content;
+      const chatId = data["chatId"];
 
-          if (chatId) {
-            const pushAction = StackActions.push("ChatScreen", { chatId });
-            navigation.dispatch(pushAction);
-          } else {
-            console.log("No chat id sent with notification");
-          }
-        });
+      if (chatId) {
+        const pushAction = StackActions.push("ChatScreen", { chatId });
+        navigation.dispatch(pushAction);
+      } else {
+        console.log("No chat id sent with notification");
+      }
+      console.log(response);
+    });
 
-    // Return a cleanup function
     return () => {
       Notifications.removeNotificationSubscription(notificationListener.current);
       Notifications.removeNotificationSubscription(responseListener.current);
@@ -323,7 +340,7 @@ const MainNavigator = (props) => {
 
     const app = getFirebaseApp();
     const dbRef = ref(getDatabase(app));
-    const userChatsRef = child(dbRef, `userChats/${userData.uid}`);
+    const userChatsRef = child(dbRef, `userChats/${userId}`);    
     const refs = [userChatsRef];
 
     onValue(userChatsRef, (querySnapshot) => {
@@ -344,7 +361,7 @@ const MainNavigator = (props) => {
           const data = chatSnapshot.val();
 
           if (data) {
-            if (!data.users.includes(userData.uid)) {
+            if (!data.users.includes(userId)) {
               return;
             }
 
@@ -388,7 +405,7 @@ const MainNavigator = (props) => {
 
     const userStarredMessagesRef = child(
       dbRef,
-      `userStarredMessages/${userData.uid}`
+      `userStarredMessages/${userId}`
     );
     refs.push(userStarredMessagesRef);
     onValue(userStarredMessagesRef, (querySnapshot) => {
@@ -414,8 +431,8 @@ const MainNavigator = (props) => {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
            <SafeAreaView className="flex-1">
-           <Text> {expoPushToken}</Text>
-           </SafeAreaView>
+                <Text>Your expo push token: {expoPushToken}</Text>
+            </SafeAreaView>
 
       <StackNavigator />
       {/* {Alert.alert("Token", expoPushToken)} */}
