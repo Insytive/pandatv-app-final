@@ -14,7 +14,6 @@ import { child, get, getDatabase, off, onValue, ref } from "firebase/database";
 import { setChatsData } from "../store/chatSlice";
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
@@ -272,9 +271,6 @@ const MainNavigator = (props) => {
 
   const userData = useSelector((state) => state.auth.userData);
   
-  // Add a null check before accessing 'uid'
-  const userId = userData ? userId : null;
-
   const storedUsers = useSelector((state) => state.users.storedUsers);
 
   const [expoPushToken, setExpoPushToken] = useState('');
@@ -340,7 +336,7 @@ const MainNavigator = (props) => {
 
     const app = getFirebaseApp();
     const dbRef = ref(getDatabase(app));
-    const userChatsRef = child(dbRef, `userChats/${userId}`);    
+    const userChatsRef = child(dbRef, `userChats/${userData.uid}`);
     const refs = [userChatsRef];
 
     onValue(userChatsRef, (querySnapshot) => {
@@ -361,7 +357,7 @@ const MainNavigator = (props) => {
           const data = chatSnapshot.val();
 
           if (data) {
-            if (!data.users.includes(userId)) {
+            if (!data.users.includes(userData.uid)) {
               return;
             }
 
@@ -405,7 +401,7 @@ const MainNavigator = (props) => {
 
     const userStarredMessagesRef = child(
       dbRef,
-      `userStarredMessages/${userId}`
+      `userStarredMessages/${userData.uid}`
     );
     refs.push(userStarredMessagesRef);
     onValue(userStarredMessagesRef, (querySnapshot) => {
@@ -431,11 +427,12 @@ const MainNavigator = (props) => {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
            <SafeAreaView className="flex-1">
+              <View style={{ flex: 1, alignItems: 'center', justifyContent: 'space-around' }}>
                 <Text>Your expo push token: {expoPushToken}</Text>
+              </View>
             </SafeAreaView>
 
       <StackNavigator />
-      {/* {Alert.alert("Token", expoPushToken)} */}
     </KeyboardAvoidingView>
   );
 };
