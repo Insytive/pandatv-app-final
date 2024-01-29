@@ -269,22 +269,24 @@ const SettingsScreen = (props) => {
 
           <TouchableOpacity
             onPress={() => dispatch(userLogout(userData))}
-            style={{ marginTop: 20, backgroundColor: colors.red }}
+            style={{ marginTop: 20, backgroundColor: colors.black }}
             className="w-full px-4 py-2 rounded-xl my-3 flex items-center justify-center"
           >
-            <Text className="py-2 text-white text-xl font-semibold">
+            <Text className="py-2 text-white text-xl font-semibold"
+            style={{ color: colors.white }}
+            >
               Logout
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             onPress={toggleModal}
-            style={{ marginTop: 20 }}
+            style={{ marginTop: 20, backgroundColor: colors.red }}
             className="w-full px-4 py-2 rounded-xl my-3 flex items-center justify-center"
           >
             <Text
               className="py-2  text-white text-xl font-semibold"
-              style={{ color: colors.lightGrey }}
+              style={{ color: colors.white }}
             >
               Delete Account
             </Text>

@@ -8,4 +8,6 @@ export default {
   primary: "#f45008",
   red: "#e74c3c",
   beige: "#FEF5C3",
+  white: "#fff",
+  black: "#000",
 };
