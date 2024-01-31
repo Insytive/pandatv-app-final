@@ -2,7 +2,7 @@
   "expo": {
     "name": "Panda TV+",
     "slug": "pandatvrsa",
-    "version": "2.1.4",
+    "version": "2.1.6",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",

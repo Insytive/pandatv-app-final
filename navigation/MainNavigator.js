@@ -14,6 +14,7 @@ import { child, get, getDatabase, off, onValue, ref } from "firebase/database";
 import { setChatsData } from "../store/chatSlice";
 import {
   ActivityIndicator,
+  Alert,
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
@@ -47,7 +48,7 @@ import Constants from 'expo-constants';
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,  // Should the notification be shown as alert
-    shouldPlaySound: false,  // Should a sound be played
+    shouldPlaySound: true,  // Should a sound be played
     shouldSetBadge: false,  // Should a badge count be set
   }),
 });
@@ -224,43 +225,39 @@ async function sendPushNotification(expoPushToken) {
 
 // This function is used to ask for permissions and to get the Expo Push Token
 async function registerForPushNotificationsAsync() {
-  try {
-    let token;
+  let token;
 
-    if (Platform.OS === 'android') {
-      Notifications.setNotificationChannelAsync('default', {
-        name: 'default',
-        importance: Notifications.AndroidImportance.MAX,
-        vibrationPattern: [0, 250, 250, 250],
-        lightColor: '#FF231F7C',
-      });
-    }
-
-    if (Device.isDevice) {
-      const { status: existingStatus } = await Notifications.getPermissionsAsync();
-      let finalStatus = existingStatus;
-      if (existingStatus !== 'granted') {
-        const { status } = await Notifications.requestPermissionsAsync();
-        finalStatus = status;
-      }
-      if (finalStatus !== 'granted') {
-        alert('Failed to get push token for push notification!');
-        return null;
-      }
-      token = await Notifications.getExpoPushTokenAsync({
-        projectId: "85404370-b36d-498e-912c-7b444bc16068",
-      });
-      console.log(token);
-    } else {
-      alert('Must use a physical device for Push Notifications');
-      return null;
-    }
-
-    return token?.data || null;
-  } catch (error) {
-    console.error("Error while registering for push notifications:", error);
-    return null;
+  if (Platform.OS === 'android') {
+    Notifications.setNotificationChannelAsync('default', {
+      name: 'default',
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: '#FF231F7C',
+    });
   }
+
+  if (Device.isDevice) {
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+    if (existingStatus !== 'granted') {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+    if (finalStatus !== 'granted') {
+      alert('Failed to get push token for push notification!');
+      return;
+    }
+    token = await Notifications.getExpoPushTokenAsync({
+      // projectId: Constants.expoConfig.extra.eas.projectId,
+      projectId: "85404370-b36d-498e-912c-7b444bc16068",
+
+    });
+    console.log("Push Token", token);
+  } else {
+    alert('Must use physical device for Push Notifications');
+  }
+
+  return token.data;
 }
 
 const MainNavigator = (props) => {
@@ -270,7 +267,6 @@ const MainNavigator = (props) => {
   const [isLoading, setIsLoading] = useState(true);
 
   const userData = useSelector((state) => state.auth.userData);
-  
   const storedUsers = useSelector((state) => state.users.storedUsers);
 
   const [expoPushToken, setExpoPushToken] = useState('');
@@ -426,13 +422,23 @@ const MainNavigator = (props) => {
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-           <SafeAreaView className="flex-1">
-              <View style={{ flex: 1, alignItems: 'center', justifyContent: 'space-around' }}>
-                <Text>Your expo push token: {expoPushToken}</Text>
-              </View>
-            </SafeAreaView>
+    {/* <View style={{ flex: 1, alignItems: 'center', justifyContent: 'space-around' }}>
+      <Text>Your expo push token: {expoPushToken}</Text>
+      <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+        <Text>Title: {notification && notification.request.content.title} </Text>
+        <Text>Body: {notification && notification.request.content.body}</Text>
+        <Text>Data: {notification && JSON.stringify(notification.request.content.data)}</Text>
+      </View>
+      <Button
+        title="Press to Send Notification"
+        onPress={async () => {
+          await sendPushNotification(expoPushToken);
+        }}
+      />
+    </View> */}
 
       <StackNavigator />
+      {/* {Alert.alert("Token", expoPushToken)} */}
     </KeyboardAvoidingView>
   );
 };
