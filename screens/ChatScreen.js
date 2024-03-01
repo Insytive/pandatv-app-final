@@ -41,6 +41,7 @@ import AwesomeAlert from "react-native-awesome-alerts";
 import { HeaderButtons, Item } from "react-navigation-header-buttons";
 import CustomHeaderButton from "../components/CustomHeaderButton";
 import UserImage from "../assets/images/user.png";
+import { getInitials } from "../utils/helpers";
 
 const ChatScreen = (props) => {
   const [chatUsers, setChatUsers] = useState([]);
@@ -50,7 +51,6 @@ const ChatScreen = (props) => {
   const [replyingTo, setReplyingTo] = useState();
   const [tempImageUri, setTempImageUri] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-
   const flatList = useRef();
 
   const userData = useSelector((state) => state.auth.userData);
@@ -88,15 +88,17 @@ const ChatScreen = (props) => {
       otherUserData && `${otherUserData.firstName} ${otherUserData.lastName}`
     );
   };
+  
 
   const getOtherChatImage = () => {
     const otheruid = chatUsers.find((uid) => uid !== userData.uid);
     const otherUserData = storedUsers[otheruid];
 
-    return otherUserData?.photo_url ? otherUserData.photo_url : UserImage;
+    return otherUserData?.photo_url;
   };
 
-  console.log("Image: ", getOtherChatImage());
+
+  console.log(getOtherChatImage());
 
   useEffect(() => {
     if (!chatData) return;
@@ -226,13 +228,15 @@ const ChatScreen = (props) => {
               {chatData.isGroupChat ? (
                 <FontAwesome5 name="users" size={24} color="#fbfbfb" />
               ) : (
-                <Image
-                  source={{
-                    uri: getOtherChatImage(),
-                  }}
+               
+                  <Image
+                  // source={ getOtherChatImage() ?  {uri: getOtherChatImage()}  : UserImage.toString()}
+                  source={ getOtherChatImage() ? { uri: getOtherChatImage() } : UserImage}
                   style={{ height: 40, width: 40, borderRadius: 20 }}
                   resizeMode="cover"
-                />
+                  />
+               
+                
               )}
             </View>
 
@@ -263,6 +267,7 @@ const ChatScreen = (props) => {
       </View>
 
       <View className="w-full bg-white px-4 py-6 rounded-t-[50px] flex-1 -mt-10">
+      
         <ImageBackground
           source={backgroundImage}
           style={styles.backgroundImage}

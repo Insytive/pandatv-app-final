@@ -36,3 +36,13 @@ export function timeElapsedSince(timestampStr) {
     return "Just now";
   }
 }
+
+
+export function getInitials(name) {
+  
+  const words = name.split(' ');
+  const initials = words.map(word => word.charAt(0));
+
+  // Join the initials to form the result
+  return initials.join('');
+}
