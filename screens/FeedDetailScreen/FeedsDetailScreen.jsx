@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  Pressable,
 } from "react-native";
 import { useIsFocused } from "@react-navigation/native";
 import { FontAwesome5, Ionicons, MaterialIcons } from "@expo/vector-icons";
@@ -117,10 +118,14 @@ const FeedDetailScreen = ({ route, navigation }) => {
     }
   };
 
+  const keyboardDismissHandler = () =>  {
+    Keyboard.dismiss();
+  }
+
   return (
     <React.Fragment>
       <View className="flex-1">
-        <View className="w-full bg-primary px-4 py-6 flex-[0.25]">
+        <View className="w-full bg-primary  px-4 py-6 flex-[0.25]">
           <View className="flex-row items-center w-full px-4 py-12">
             {/* go back */}
             <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -130,8 +135,7 @@ const FeedDetailScreen = ({ route, navigation }) => {
             <Text className="font-bold text-white"> PandaTV Community </Text>
           </View>
         </View>
-
-        <View className="w-full bg-white  py-6 rounded-t-[50px] flex-1 -mt-10">
+        <Pressable className="w-full bg-white py-6 rounded-t-[50px] flex-1 -mt-10" onPress={keyboardDismissHandler}>
           <View style={styles.header}>
             <TouchableOpacity onPress={() => navigation.goBack()}>
               <Ionicons name="close-outline" size={24} color="black" />
@@ -219,7 +223,8 @@ const FeedDetailScreen = ({ route, navigation }) => {
               </View>
             )}
           </KeyboardAvoidingView>
-        </View>
+      
+        </Pressable>
       </View>
     </React.Fragment>
   );

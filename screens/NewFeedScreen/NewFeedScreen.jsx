@@ -10,6 +10,7 @@ import {
   Platform,
   ActivityIndicator,
   Keyboard,
+  Pressable,
 } from "react-native";
 import { MaterialIcons, Ionicons, Entypo } from "@expo/vector-icons";
 import { useSelector } from "react-redux";
@@ -20,6 +21,7 @@ import { ProgressBar } from "../../components/ProgressBar";
 import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system";
 import { useFocusEffect } from "@react-navigation/native";
+
 
 const baseApiUrl = "https://admin.pandatv.co.za/api";
 
@@ -174,6 +176,11 @@ const NewFeedScreen = ({ navigation }) => {
     }, [])
   );
 
+
+  const keyboardDismissHandler = () =>  {
+    Keyboard.dismiss();
+  }
+
   const MAX_LENGTH = 280;
 
   return (
@@ -190,12 +197,8 @@ const NewFeedScreen = ({ navigation }) => {
         </View>
       </View>
 
-      <View className="w-full px-4  bg-white py-6 rounded-t-[50px] flex-1 -mt-10">
-        {/* <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={styles.container}
-          keyboardVerticalOffset={100}
-        > */}
+      <Pressable className="w-full px-4  bg-white py-6 rounded-t-[50px] flex-1 -mt-10" onPress={keyboardDismissHandler}>
+        
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Ionicons name="close-outline" size={24} color="black" />
@@ -253,7 +256,7 @@ const NewFeedScreen = ({ navigation }) => {
           <Text style={styles.counter}>{MAX_LENGTH - feedContent.length}</Text>
         </View>
         {/* </KeyboardAvoidingView> */}
-      </View>
+      </Pressable>
     </View>
   );
 };

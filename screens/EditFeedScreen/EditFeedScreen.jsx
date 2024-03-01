@@ -11,6 +11,8 @@ import {
   ActivityIndicator,
   StatusBar,
   Button,
+  Keyboard,
+  Pressable,
 } from "react-native";
 import { MaterialIcons, Ionicons, Entypo } from "@expo/vector-icons";
 import { useSelector } from "react-redux";
@@ -86,7 +88,7 @@ const EditFeedScreen = ({ navigation, route }) => {
 
       navigation.goBack();
 
-      console.log(response.data);
+      // console.log(response.data);
       setFeedContent("");
     } catch (error) {
       // toast.show("Error posting data", {
@@ -125,6 +127,10 @@ const EditFeedScreen = ({ navigation, route }) => {
 
   const MAX_LENGTH = 280;
 
+  const keyboardDismissHandler = () =>  {
+    Keyboard.dismiss();
+  }
+
   return (
     <View className="flex-1">
       {/* <Toast ref={(ref) => Toast.setRef(ref)} /> */}
@@ -139,7 +145,7 @@ const EditFeedScreen = ({ navigation, route }) => {
         </View>
       </View>
 
-      <View className="w-full px-4  bg-white py-6 rounded-t-[50px] flex-1 -mt-10">
+      <Pressable className="w-full px-4 bg-white py-6 rounded-t-[50px] flex-1 -mt-10" onPress={keyboardDismissHandler}>
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={styles.container}
@@ -212,7 +218,8 @@ const EditFeedScreen = ({ navigation, route }) => {
             </Text>
           </View>
         </KeyboardAvoidingView>
-      </View>
+      
+      </Pressable>
     </View>
   );
 };
