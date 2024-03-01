@@ -28,7 +28,7 @@ const FeedDetailScreen = ({ route, navigation }) => {
   const toast = useToast();
   const userData = useSelector((state) => state.auth.userData);
 
-  // console.log("Loved by user: ", lovedByUser);
+  console.log("User: ", userData);
 
   const { feed } = route.params;
   const { content } = route.params;
