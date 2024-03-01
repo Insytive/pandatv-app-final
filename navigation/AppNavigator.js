@@ -7,9 +7,11 @@ import { useSelector } from "react-redux";
 import StartUpScreen from "../screens/StartUpScreen";
 
 const AppNavigator = (props) => {
+  const isAuth = useSelector((state) => state.auth.token !== null && state.auth.token !== "");
+  const didTryAutoLogin = useSelector((state) => state.auth.didTryAutoLogin);
 
-  const isAuth = useSelector(state => state.auth.token !== null && state.auth.token !== "");
-  const didTryAutoLogin = useSelector(state => state.auth.didTryAutoLogin);
+  console.log("isAuth:", isAuth);
+  console.log("didTryAutoLogin:", didTryAutoLogin);
 
   return (
     <NavigationContainer>
@@ -19,5 +21,6 @@ const AppNavigator = (props) => {
     </NavigationContainer>
   );
 };
+
 
 export default AppNavigator;

@@ -276,6 +276,13 @@ const MainNavigator = (props) => {
 
   useEffect(() => {
 
+    if (!userData) {
+      // If userData is null or undefined, handle the situation accordingly
+      // For example, you may want to redirect the user to the login screen
+      console.error("User data is null or undefined");
+      return;
+    }
+
     // Register for notifications
     console.log("Registering for push notifications");
     registerForPushNotificationsAsync().then(token => {
@@ -308,7 +315,7 @@ const MainNavigator = (props) => {
       Notifications.removeNotificationSubscription(notificationListener.current);
       Notifications.removeNotificationSubscription(responseListener.current);
     };
-  }, []);
+  }, [userData]);
 
   useEffect(() => {
     if (expoPushToken) {
