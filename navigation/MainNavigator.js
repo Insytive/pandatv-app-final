@@ -3,6 +3,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
 
 import ChatSettingsScreen from "../screens/ChatSettingsScreen";
+import StoreScreen from "../screens/EstoreScreen/StoreScreen";
 import SettingsScreen from "../screens/SettingsScreen";
 import ChatListScreen from "../screens/ChatListScreen";
 import ChatScreen from "../screens/ChatScreen";
@@ -143,6 +144,34 @@ const TabNavigator = () => {
         }}
         component={CommunityScreen}
       />
+
+      <Tab.Screen
+        name="eStore"
+        component={StoreScreen}
+        options={{
+          tabBarLabel: "eStore",
+          tabBarIcon: ({ focused }) => (
+            <View
+              style={
+                focused ? Styles.activeIconBackground : Styles.iconBackground
+              }
+            >
+              <Ionicons
+                name={focused ? "md-cart" : "md-cart-outline"}
+                size={20}
+                color="#333"
+              />
+            </View>
+          ),
+          tabBarActiveTintColor: "#333",
+          tabBarInactiveTintColor: "#333",
+          tabBarLabelStyle: {
+            fontSize: 13,
+            fontWeight: "600",
+          },
+        }}
+      />
+
     </Tab.Navigator>
   );
 };
@@ -172,6 +201,8 @@ const StackNavigator = () => {
           name="LocalOpportunity"
           component={LocalOpportunityScreen}
         />
+
+        <Stack.Screen name="eStore" component={StoreScreen} />
 
         <Stack.Screen name="FeedDetail" component={FeedDetailScreen} />
         <Stack.Screen name="NewFeedScreen" component={NewFeedScreen} />
@@ -248,8 +279,8 @@ async function registerForPushNotificationsAsync() {
       return;
     }
     token = await Notifications.getExpoPushTokenAsync({
-      // projectId: Constants.expoConfig.extra.eas.projectId,
-      projectId: "85404370-b36d-498e-912c-7b444bc16068",
+      projectId: Constants.expoConfig.extra.eas.projectId,
+      // projectId: "85404370-b36d-498e-912c-7b444bc16068",
 
     });
     console.log("Push Token", token);
@@ -445,7 +476,7 @@ const MainNavigator = (props) => {
     </View> */}
 
       <StackNavigator />
-      {/* {Alert.alert("Token", expoPushToken)} */}
+      {Alert.alert("Token", expoPushToken)}
     </KeyboardAvoidingView>
   );
 };
@@ -469,4 +500,3 @@ const Styles = StyleSheet.create({
     alignItems: "center",
   },
 });
-
