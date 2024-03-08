@@ -233,27 +233,6 @@ const StackNavigator = () => {
   );
 };
 
-// This function can be used to send test notifications:
-async function sendPushNotification(expoPushToken) {
-  const message = {
-    to: expoPushToken,
-    sound: 'default',
-    title: 'Original Title',
-    body: 'And here is the body!',
-    data: { someData: 'goes here' },
-  };
-
-  await fetch('https://exp.host/--/api/v2/push/send', {
-    method: 'POST',
-    headers: {
-      Accept: 'application/json',
-      'Accept-encoding': 'gzip, deflate',
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(message),
-  });
-}
-
 // This function is used to ask for permissions and to get the Expo Push Token
 async function registerForPushNotificationsAsync() {
   let token;
@@ -280,8 +259,6 @@ async function registerForPushNotificationsAsync() {
     }
     token = await Notifications.getExpoPushTokenAsync({
       projectId: Constants.expoConfig.extra.eas.projectId,
-      // projectId: "85404370-b36d-498e-912c-7b444bc16068",
-
     });
     console.log("Push Token", token);
   } else {
@@ -304,6 +281,72 @@ const MainNavigator = (props) => {
   const [notification, setNotification] = useState(false);
   const notificationListener = useRef();
   const responseListener = useRef();
+
+  // Function to re-register for push notifications
+  const reRegisterForPushNotificationsAsync = async () => {
+    try {
+      const newToken = await registerForPushNotificationsAsync();
+      console.log("Expo Push Token (Re-registered): ", newToken);
+      setExpoPushToken(newToken);
+    } catch (error) {
+      console.error("Error while re-registering for push notifications: ", error);
+    }
+  };
+
+  const handleNotificationResponse = (response) => {
+    /* Here you might want to handle user's response to a notification */
+    const { data } = response.notification.request.content;
+    const chatId = data["chatId"];
+
+    if (chatId) {
+      const pushAction = StackActions.push("ChatScreen", { chatId });
+      navigation.dispatch(pushAction);
+    } else {
+      console.log("No chat id sent with notification");
+    }
+    
+    // Obtain push receipt for this notification
+    getPushReceipt(response.notification.request.identifier);
+  };
+
+  const getPushReceipt = async (notificationIdentifier) => {
+    try {
+      const response = await fetch(`https://exp.host/--/api/v2/push/getReceipts`, {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ids: [notificationIdentifier] }),
+      });
+  
+      const receiptData = await response.json();
+      console.log("Push Receipt Data:", receiptData);
+  
+      // Send the receipt data to your Laravel backend
+      sendReceiptToBackend(receiptData);
+    } catch (error) {
+      console.error("Error while getting push receipt:", error);
+    }
+  };
+  
+  const sendReceiptToBackend = async (receiptData) => {
+    try {
+      const response = await axios.post(
+        'https://admin.pandatv.co.za/api/push-receipt',
+        { receiptData },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+  
+      console.log("Receipt data sent to backend:", response.data);
+    } catch (error) {
+      console.error("Error while sending receipt data to backend:", error);
+    }
+  };  
 
   useEffect(() => {
 
@@ -350,18 +393,43 @@ const MainNavigator = (props) => {
 
   useEffect(() => {
     if (expoPushToken) {
-      // Subscribe to push notifications on your server
-      try {
-        const response = axios.post(
-          "https://admin.pandatv.co.za/api/exponent/devices/subscribe",
-          { token: expoPushToken },
-          { headers: { "Content-Type": "application/json" } }
-        );
+      // Obtain Bearer Token for authentication
+      const getBearerToken = async () => {
+        try {
+          const response = await axios.post(
+            "https://admin.pandatv.co.za/oauth/token",
+            {
+              grant_type: "password",
+              client_id: "5", // Replace with your client_id
+              client_secret: "ynK96ZnHK1nH2ZR10MSYMrte7UOR8lQEPmiQZnZF", // Replace with your client_secret
+              username: "kylemabaso@gmail.com", // Replace with user's email or username
+              password: "password", // Replace with user's password
+              scope: "",
+            }
+          );
 
-        console.log("Successfully subscribed:", response.data);
-      } catch (error) {
-        console.error("Error while subscribing:", error);
-      }
+          const bearerToken = response.data.access_token;
+          console.log("Bearer Token:", bearerToken);
+
+          // Subscribe to push notifications on your Laravel server with Bearer Token
+          try {
+            axios.post(
+              "https://admin.pandatv.co.za/api/register-device",
+              { device_token: expoPushToken },
+              { headers: { "Content-Type": "application/json", Authorization: `Bearer ${bearerToken}` } }
+            );
+            console.log("Successfully subscribed to Panda TV");
+          } catch (error) {
+            console.error("Error while subscribing to Panda TV: ", error);
+            // If there's an error, attempt to re-register for push notifications
+            reRegisterForPushNotificationsAsync();
+          }
+        } catch (error) {
+          console.error("Error obtaining Bearer Token:", error);
+        }
+      };
+
+      getBearerToken();
     }
   }, [expoPushToken]);
 
@@ -443,6 +511,28 @@ const MainNavigator = (props) => {
       dispatch(setStarredMessages({ starredMessages }));
     });
 
+    // Listener for responses to notifications
+    responseListener.current = Notifications.addNotificationResponseReceivedListener(
+      handleNotificationResponse
+    );
+
+    const handleNotification = (notification) => {
+      /* Here you might want to handle the notification when it arrives in the foreground */
+      console.log("Foreground Notification:", notification);
+    
+      // Extract necessary data from the notification and navigate accordingly
+      const { data } = notification.request.content;
+      const chatId = data["chatId"];
+    
+      if (chatId) {
+        const pushAction = StackActions.push("ChatScreen", { chatId });
+        navigation.dispatch(pushAction);
+      } else {
+        console.log("No chat id sent with notification");
+      }
+    };
+    
+
     return () => {
       console.log("Unsubscribing firebase listeners");
       refs.forEach((ref) => off(ref));
@@ -460,23 +550,8 @@ const MainNavigator = (props) => {
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-    {/* <View style={{ flex: 1, alignItems: 'center', justifyContent: 'space-around' }}>
-      <Text>Your expo push token: {expoPushToken}</Text>
-      <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-        <Text>Title: {notification && notification.request.content.title} </Text>
-        <Text>Body: {notification && notification.request.content.body}</Text>
-        <Text>Data: {notification && JSON.stringify(notification.request.content.data)}</Text>
-      </View>
-      <Button
-        title="Press to Send Notification"
-        onPress={async () => {
-          await sendPushNotification(expoPushToken);
-        }}
-      />
-    </View> */}
 
       <StackNavigator />
-      {Alert.alert("Token", expoPushToken)}
     </KeyboardAvoidingView>
   );
 };
