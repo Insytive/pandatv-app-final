@@ -282,19 +282,60 @@ const MainNavigator = (props) => {
   const notificationListener = useRef();
   const responseListener = useRef();
 
-  // Function to re-register for push notifications
-  const reRegisterForPushNotificationsAsync = async () => {
+  // Function to register the device for push notifications
+  const registerForPushNotificationsAsync = async () => {
+    let token;
+
+    if (Platform.OS === 'android') {
+      Notifications.setNotificationChannelAsync('default', {
+        name: 'default',
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: '#FF231F7C',
+      });
+    }
+
+    if (Device.isDevice) {
+      const { status: existingStatus } = await Notifications.getPermissionsAsync();
+      let finalStatus = existingStatus;
+      if (existingStatus !== 'granted') {
+        const { status } = await Notifications.requestPermissionsAsync();
+        finalStatus = status;
+      }
+      if (finalStatus !== 'granted') {
+        alert('Failed to get push token for push notification!');
+        return;
+      }
+      token = (await Notifications.getExpoPushTokenAsync()).data;
+      console.log("Push Token", token);
+    } else {
+      alert('Must use a physical device for Push Notifications');
+    }
+
+    return token;
+  };
+
+  // Function to register the device with Laravel backend
+  const registerDeviceWithBackend = async (deviceToken) => {
     try {
-      const newToken = await registerForPushNotificationsAsync();
-      console.log("Expo Push Token (Re-registered): ", newToken);
-      setExpoPushToken(newToken);
+      const response = await axios.post(
+        'https://admin.pandatv.co.za/api/register-device',
+        { device_token: deviceToken },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${userData.access_token}`,
+          },
+        }
+      );
+      console.log("Device registered with Laravel backend:", response.data);
     } catch (error) {
-      console.error("Error while re-registering for push notifications: ", error);
+      console.error("Error registering device with backend:", error);
     }
   };
 
+  // Function to handle incoming notifications
   const handleNotificationResponse = (response) => {
-    /* Here you might want to handle user's response to a notification */
     const { data } = response.notification.request.content;
     const chatId = data["chatId"];
 
@@ -304,7 +345,7 @@ const MainNavigator = (props) => {
     } else {
       console.log("No chat id sent with notification");
     }
-    
+
     // Obtain push receipt for this notification
     getPushReceipt(response.notification.request.identifier);
   };
@@ -364,16 +405,17 @@ const MainNavigator = (props) => {
       setExpoPushToken(token)
     }).catch(error => console.log("Error while registering for push notifications: ", error));
 
-    // Listener for incoming notifications
-    notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
-      /* Here you might want to handle the notification when it arrives */
-      setNotification(notification);
-    });
-
     // Listener for responses to notifications
-    responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
-      /* Here you might want to handle user's response to a notification */
-      const { data } = response.notification.request.content;
+    responseListener.current = Notifications.addNotificationResponseReceivedListener(
+      handleNotificationResponse
+    );
+
+    const handleNotification = (notification) => {
+      // Here you might want to handle the notification when it arrives in the foreground
+      console.log("Foreground Notification:", notification);
+
+      // Extract necessary data from the notification and navigate accordingly
+      const { data } = notification.request.content;
       const chatId = data["chatId"];
 
       if (chatId) {
@@ -382,14 +424,14 @@ const MainNavigator = (props) => {
       } else {
         console.log("No chat id sent with notification");
       }
-      console.log(response);
-    });
+    };
 
     return () => {
+      // Unsubscribe from Expo's notification listeners
       Notifications.removeNotificationSubscription(notificationListener.current);
       Notifications.removeNotificationSubscription(responseListener.current);
     };
-  }, [userData]);
+  }, [userData, expoPushToken]);
 
   useEffect(() => {
     if (expoPushToken) {
@@ -407,20 +449,27 @@ const MainNavigator = (props) => {
               scope: "",
             }
           );
-
+  
           const bearerToken = response.data.access_token;
           console.log("Bearer Token:", bearerToken);
-
+  
           // Subscribe to push notifications on your Laravel server with Bearer Token
           try {
-            axios.post(
+            // Register the device with your Laravel backend
+            const registrationResponse = await axios.post(
               "https://admin.pandatv.co.za/api/register-device",
               { device_token: expoPushToken },
-              { headers: { "Content-Type": "application/json", Authorization: `Bearer ${bearerToken}` } }
+              {
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${bearerToken}`,
+                },
+              }
             );
-            console.log("Successfully subscribed to Panda TV");
-          } catch (error) {
-            console.error("Error while subscribing to Panda TV: ", error);
+  
+            console.log("Successfully registered the device:", registrationResponse.data);
+          } catch (registrationError) {
+            console.error("Error while registering the device:", registrationError);
             // If there's an error, attempt to re-register for push notifications
             reRegisterForPushNotificationsAsync();
           }
@@ -428,10 +477,12 @@ const MainNavigator = (props) => {
           console.error("Error obtaining Bearer Token:", error);
         }
       };
-
-      getBearerToken();
+  
+      if (expoPushToken) {
+        getBearerToken();
+      }
     }
-  }, [expoPushToken]);
+  }, [expoPushToken]);  
 
   useEffect(() => {
     console.log("Subscribing to firebase listeners");
@@ -540,10 +591,12 @@ const MainNavigator = (props) => {
   }, []);
 
   if (isLoading) {
-    <View style={commonStyles.center}>
-      <ActivityIndicator size={"large"} color={colors.primary} />
-    </View>;
-  }
+    return (
+      <View style={commonStyles.center}>
+        <ActivityIndicator size={"large"} color={colors.primary} />
+      </View>
+    );
+  }  
 
   return (
     <KeyboardAvoidingView
