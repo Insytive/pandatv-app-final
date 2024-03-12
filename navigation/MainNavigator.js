@@ -282,58 +282,6 @@ const MainNavigator = (props) => {
   const notificationListener = useRef();
   const responseListener = useRef();
 
-  // Function to register the device for push notifications
-  const registerForPushNotificationsAsync = async () => {
-    let token;
-
-    if (Platform.OS === 'android') {
-      Notifications.setNotificationChannelAsync('default', {
-        name: 'default',
-        importance: Notifications.AndroidImportance.MAX,
-        vibrationPattern: [0, 250, 250, 250],
-        lightColor: '#FF231F7C',
-      });
-    }
-
-    if (Device.isDevice) {
-      const { status: existingStatus } = await Notifications.getPermissionsAsync();
-      let finalStatus = existingStatus;
-      if (existingStatus !== 'granted') {
-        const { status } = await Notifications.requestPermissionsAsync();
-        finalStatus = status;
-      }
-      if (finalStatus !== 'granted') {
-        alert('Failed to get push token for push notification!');
-        return;
-      }
-      token = (await Notifications.getExpoPushTokenAsync()).data;
-      console.log("Push Token", token);
-    } else {
-      alert('Must use a physical device for Push Notifications');
-    }
-
-    return token;
-  };
-
-  // Function to register the device with Laravel backend
-  const registerDeviceWithBackend = async (deviceToken) => {
-    try {
-      const response = await axios.post(
-        'https://admin.pandatv.co.za/api/register-device',
-        { device_token: deviceToken },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${userData.access_token}`,
-          },
-        }
-      );
-      console.log("Device registered with Laravel backend:", response.data);
-    } catch (error) {
-      console.error("Error registering device with backend:", error);
-    }
-  };
-
   // Function to handle incoming notifications
   const handleNotificationResponse = (response) => {
     const { data } = response.notification.request.content;
@@ -411,7 +359,6 @@ const MainNavigator = (props) => {
     );
 
     const handleNotification = (notification) => {
-      // Here you might want to handle the notification when it arrives in the foreground
       console.log("Foreground Notification:", notification);
 
       // Extract necessary data from the notification and navigate accordingly
@@ -442,10 +389,10 @@ const MainNavigator = (props) => {
             "https://admin.pandatv.co.za/oauth/token",
             {
               grant_type: "password",
-              client_id: "5", // Replace with your client_id
-              client_secret: "ynK96ZnHK1nH2ZR10MSYMrte7UOR8lQEPmiQZnZF", // Replace with your client_secret
-              username: "kylemabaso@gmail.com", // Replace with user's email or username
-              password: "password", // Replace with user's password
+              client_id: "5",
+              client_secret: "ynK96ZnHK1nH2ZR10MSYMrte7UOR8lQEPmiQZnZF",
+              username: "kylemabaso@gmail.com",
+              password: "password",
               scope: "",
             }
           );
@@ -453,9 +400,9 @@ const MainNavigator = (props) => {
           const bearerToken = response.data.access_token;
           console.log("Bearer Token:", bearerToken);
   
-          // Subscribe to push notifications on your Laravel server with Bearer Token
+          // Subscribe to push notifications on backend with Bearer Token
           try {
-            // Register the device with your Laravel backend
+            // Register the device with your backend
             const registrationResponse = await axios.post(
               "https://admin.pandatv.co.za/api/register-device",
               { device_token: expoPushToken },
