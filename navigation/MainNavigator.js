@@ -381,37 +381,41 @@ const MainNavigator = (props) => {
   }, [userData, expoPushToken]);
 
   useEffect(() => {
-    if (expoPushToken && userData) {
-      const registerDevice = async () => {
-        try {
-          // Register the device with your backend
-          const registrationResponse = await axios.post(
-            "https://admin.pandatv.co.za/api/register-device",
-            { device_token: expoPushToken, firebase_uid: userData.uid },
-            {
-              headers: {
-                "Content-Type": "application/json",
-              },
-            }
-          );
-  
-          console.log("Successfully registered the device:", registrationResponse.data);
-        } catch (error) {
-          if (error.response && error.response.status === 401) {
-            // Handle 401 Unauthorized (if needed)
-            console.error("Unauthorized access, handle accordingly");
-          } else {
-            console.error("Error while registering the device:", error);
-            // If there's an error, attempt to re-register for push notifications
-            reRegisterForPushNotificationsAsync(userData);
-          }
-        }
-      };
-  
-      registerDevice();
+    if (!expoPushToken || !userData) {
+      return;
     }
+  
+    console.log("User", userData);
+  
+    const registerDevice = async () => {
+      try {
+        // Register the device with your backend
+        const registrationResponse = await axios.post(
+          "https://admin.pandatv.co.za/api/register-device",
+          { device_token: expoPushToken, firebase_uid: userData.uid },
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+  
+        console.log("Successfully registered the device:", registrationResponse.data);
+      } catch (error) {
+        if (error.response && error.response.status === 401) {
+          // Handle 401 Unauthorized (if needed)
+          console.error("Unauthorized access, handle accordingly");
+        } else {
+          console.error("Error while registering the device:", error);
+          // If there's an error, attempt to re-register for push notifications
+          reRegisterForPushNotificationsAsync(userData);
+        }
+      }
+    };
+  
+    registerDevice();
   }, [expoPushToken, userData]);
-
+  
   useEffect(() => {
     console.log("Subscribing to firebase listeners");
 
