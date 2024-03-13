@@ -312,7 +312,7 @@ const MainNavigator = (props) => {
       const receiptData = await response.json();
       console.log("Push Receipt Data:", receiptData);
   
-      // Send the receipt data to your Laravel backend
+      // Send the receipt data to backend
       sendReceiptToBackend(receiptData);
     } catch (error) {
       console.error("Error while getting push receipt:", error);
@@ -381,55 +381,36 @@ const MainNavigator = (props) => {
   }, [userData, expoPushToken]);
 
   useEffect(() => {
-    if (expoPushToken) {
-      // Obtain Bearer Token for authentication
-      const getBearerToken = async () => {
+    if (expoPushToken && userData) {
+      const registerDevice = async () => {
         try {
-          const response = await axios.post(
-            "https://admin.pandatv.co.za/oauth/token",
+          // Register the device with your backend
+          const registrationResponse = await axios.post(
+            "https://admin.pandatv.co.za/api/register-device",
+            { device_token: expoPushToken, firebase_uid: userData.uid },
             {
-              grant_type: "password",
-              client_id: "5",
-              client_secret: "ynK96ZnHK1nH2ZR10MSYMrte7UOR8lQEPmiQZnZF",
-              username: "kylemabaso@gmail.com",
-              password: "password",
-              scope: "",
+              headers: {
+                "Content-Type": "application/json",
+              },
             }
           );
   
-          const bearerToken = response.data.access_token;
-          console.log("Bearer Token:", bearerToken);
-  
-          // Subscribe to push notifications on backend with Bearer Token
-          try {
-            // Register the device with your backend
-            const registrationResponse = await axios.post(
-              "https://admin.pandatv.co.za/api/register-device",
-              { device_token: expoPushToken },
-              {
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${bearerToken}`,
-                },
-              }
-            );
-  
-            console.log("Successfully registered the device:", registrationResponse.data);
-          } catch (registrationError) {
-            console.error("Error while registering the device:", registrationError);
-            // If there's an error, attempt to re-register for push notifications
-            reRegisterForPushNotificationsAsync();
-          }
+          console.log("Successfully registered the device:", registrationResponse.data);
         } catch (error) {
-          console.error("Error obtaining Bearer Token:", error);
+          if (error.response && error.response.status === 401) {
+            // Handle 401 Unauthorized (if needed)
+            console.error("Unauthorized access, handle accordingly");
+          } else {
+            console.error("Error while registering the device:", error);
+            // If there's an error, attempt to re-register for push notifications
+            reRegisterForPushNotificationsAsync(userData);
+          }
         }
       };
   
-      if (expoPushToken) {
-        getBearerToken();
-      }
+      registerDevice();
     }
-  }, [expoPushToken]);  
+  }, [expoPushToken, userData]);
 
   useEffect(() => {
     console.log("Subscribing to firebase listeners");
