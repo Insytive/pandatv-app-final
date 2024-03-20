@@ -238,9 +238,7 @@ const StackNavigator = () => {
 // #endregion - Navigation 
 
 
-// #region - push notifications
 
-// #region - push notifications
 
 // This function can be used to send test notifications:
 async function sendPushNotification(expoPushToken) {
@@ -313,6 +311,47 @@ const MainNavigator = (props) => {
   const [notification, setNotification] = useState(false);
   const notificationListener = useRef();
   const responseListener = useRef();
+
+
+  // #region - push notifications
+useEffect(() => {
+  if (!expoPushToken || !userData) {
+    return;
+  }
+
+  console.log("User", userData);
+
+  const registerDevice = async () => {
+    try {
+      // Register the device with your backend
+      const registrationResponse = await axios.post(
+        "https://admin.pandatv.co.za/api/register-device",
+        { device_token: expoPushToken, firebase_uid: userData.uid },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+
+      console.log("Successfully registered the device 🔥", registrationResponse);
+    } catch (error) {
+      console.error("ERROR 💥:", error);
+      if (error.response && error.response.status === 401) {
+        // Handle 401 Unauthorized (if needed)
+        console.error("Unauthorized access, handle accordingly");
+      } else {
+        console.error("ERROR 💥:", error);
+        // If there's an error, attempt to re-register for push notifications
+        // reRegisterForPushNotificationsAsync(userData);
+      }
+    }
+  };
+
+  registerDevice();
+}, [expoPushToken, userData]);
+// #region - push notifications
 
   useEffect(() => {
 
