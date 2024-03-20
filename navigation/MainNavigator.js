@@ -54,6 +54,8 @@ Notifications.setNotificationHandler({
   }),
 });
 
+
+// #region - Navigation //
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
@@ -233,6 +235,34 @@ const StackNavigator = () => {
   );
 };
 
+// #endregion - Navigation 
+
+
+// #region - push notifications
+
+// #region - push notifications
+
+// This function can be used to send test notifications:
+async function sendPushNotification(expoPushToken) {
+  const message = {
+    to: expoPushToken,
+    sound: 'default',
+    title: 'Original Title',
+    body: 'And here is the body!',
+    data: { someData: 'goes here' },
+  };
+
+  await fetch('https://exp.host/--/api/v2/push/send', {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'Accept-encoding': 'gzip, deflate',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(message),
+  });
+}
+
 // This function is used to ask for permissions and to get the Expo Push Token
 async function registerForPushNotificationsAsync() {
   let token;
@@ -259,6 +289,8 @@ async function registerForPushNotificationsAsync() {
     }
     token = await Notifications.getExpoPushTokenAsync({
       projectId: Constants.expoConfig.extra.eas.projectId,
+      // projectId: "85404370-b36d-498e-912c-7b444bc16068",
+
     });
     console.log("Push Token", token);
   } else {
@@ -282,61 +314,6 @@ const MainNavigator = (props) => {
   const notificationListener = useRef();
   const responseListener = useRef();
 
-  // Function to handle incoming notifications
-  const handleNotificationResponse = (response) => {
-    const { data } = response.notification.request.content;
-    const chatId = data["chatId"];
-
-    if (chatId) {
-      const pushAction = StackActions.push("ChatScreen", { chatId });
-      navigation.dispatch(pushAction);
-    } else {
-      console.log("No chat id sent with notification");
-    }
-
-    // Obtain push receipt for this notification
-    getPushReceipt(response.notification.request.identifier);
-  };
-
-  const getPushReceipt = async (notificationIdentifier) => {
-    try {
-      const response = await fetch(`https://exp.host/--/api/v2/push/getReceipts`, {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ ids: [notificationIdentifier] }),
-      });
-  
-      const receiptData = await response.json();
-      console.log("Push Receipt Data:", receiptData);
-  
-      // Send the receipt data to backend
-      sendReceiptToBackend(receiptData);
-    } catch (error) {
-      console.error("Error while getting push receipt:", error);
-    }
-  };
-  
-  const sendReceiptToBackend = async (receiptData) => {
-    try {
-      const response = await axios.post(
-        'https://admin.pandatv.co.za/api/push-receipt',
-        { receiptData },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-  
-      console.log("Receipt data sent to backend:", response.data);
-    } catch (error) {
-      console.error("Error while sending receipt data to backend:", error);
-    }
-  };  
-
   useEffect(() => {
 
     if (!userData) {
@@ -353,16 +330,16 @@ const MainNavigator = (props) => {
       setExpoPushToken(token)
     }).catch(error => console.log("Error while registering for push notifications: ", error));
 
+    // Listener for incoming notifications
+    notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
+      /* Here you might want to handle the notification when it arrives */
+      setNotification(notification);
+    });
+
     // Listener for responses to notifications
-    responseListener.current = Notifications.addNotificationResponseReceivedListener(
-      handleNotificationResponse
-    );
-
-    const handleNotification = (notification) => {
-      console.log("Foreground Notification:", notification);
-
-      // Extract necessary data from the notification and navigate accordingly
-      const { data } = notification.request.content;
+    responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+      /* Here you might want to handle user's response to a notification */
+      const { data } = response.notification.request.content;
       const chatId = data["chatId"];
 
       if (chatId) {
@@ -371,51 +348,32 @@ const MainNavigator = (props) => {
       } else {
         console.log("No chat id sent with notification");
       }
-    };
+      console.log(response);
+    });
 
     return () => {
-      // Unsubscribe from Expo's notification listeners
       Notifications.removeNotificationSubscription(notificationListener.current);
       Notifications.removeNotificationSubscription(responseListener.current);
     };
-  }, [userData, expoPushToken]);
+  }, [userData]);
 
   useEffect(() => {
-    if (!expoPushToken || !userData) {
-      return;
-    }
-  
-    console.log("User", userData);
-  
-    const registerDevice = async () => {
+    if (expoPushToken) {
+      // Subscribe to push notifications on your server
       try {
-        // Register the device with your backend
-        const registrationResponse = await axios.post(
-          "https://admin.pandatv.co.za/api/register-device",
-          { device_token: expoPushToken, firebase_uid: userData.uid },
-          {
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
+        const response = axios.post(
+          "https://admin.pandatv.co.za/api/exponent/devices/subscribe",
+          { token: expoPushToken },
+          { headers: { "Content-Type": "application/json" } }
         );
-  
-        console.log("Successfully registered the device:", registrationResponse.data);
+
+        console.log("Successfully subscribed:", response.data);
       } catch (error) {
-        if (error.response && error.response.status === 401) {
-          // Handle 401 Unauthorized (if needed)
-          console.error("Unauthorized access, handle accordingly");
-        } else {
-          console.error("Error while registering the device:", error);
-          // If there's an error, attempt to re-register for push notifications
-          reRegisterForPushNotificationsAsync(userData);
-        }
+        console.error("Error while subscribing:", error);
       }
-    };
-  
-    registerDevice();
-  }, [expoPushToken, userData]);
-  
+    }
+  }, [expoPushToken]);
+
   useEffect(() => {
     console.log("Subscribing to firebase listeners");
 
@@ -494,28 +452,6 @@ const MainNavigator = (props) => {
       dispatch(setStarredMessages({ starredMessages }));
     });
 
-    // Listener for responses to notifications
-    responseListener.current = Notifications.addNotificationResponseReceivedListener(
-      handleNotificationResponse
-    );
-
-    const handleNotification = (notification) => {
-      /* Here you might want to handle the notification when it arrives in the foreground */
-      console.log("Foreground Notification:", notification);
-    
-      // Extract necessary data from the notification and navigate accordingly
-      const { data } = notification.request.content;
-      const chatId = data["chatId"];
-    
-      if (chatId) {
-        const pushAction = StackActions.push("ChatScreen", { chatId });
-        navigation.dispatch(pushAction);
-      } else {
-        console.log("No chat id sent with notification");
-      }
-    };
-    
-
     return () => {
       console.log("Unsubscribing firebase listeners");
       refs.forEach((ref) => off(ref));
@@ -523,20 +459,33 @@ const MainNavigator = (props) => {
   }, []);
 
   if (isLoading) {
-    return (
-      <View style={commonStyles.center}>
-        <ActivityIndicator size={"large"} color={colors.primary} />
-      </View>
-    );
-  }  
+    <View style={commonStyles.center}>
+      <ActivityIndicator size={"large"} color={colors.primary} />
+    </View>;
+  }
 
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
+    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'space-around' }}>
+      <Text>Your expo push token: {expoPushToken}</Text>
+      <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+        <Text>Title: {notification && notification.request.content.title} </Text>
+        <Text>Body: {notification && notification.request.content.body}</Text>
+        <Text>Data: {notification && JSON.stringify(notification.request.content.data)}</Text>
+      </View>
+      <Button
+        title="Press to Send Notification"
+        onPress={async () => {
+          await sendPushNotification(expoPushToken);
+        }}
+      />
+    </View>
 
       <StackNavigator />
+      {Alert.alert("Token", expoPushToken)}
     </KeyboardAvoidingView>
   );
 };
