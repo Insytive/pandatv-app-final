@@ -1,4 +1,5 @@
 import * as Device from "expo-device";
+import Constants from 'expo-constants';
 import * as Notifications from "expo-notifications";
 import { getFirebaseApp } from "../firebaseHelper";
 import {
@@ -154,7 +155,7 @@ const saveDataToStorage = (token, uid, expiryDate) => {
 
 const storePushToken = async (userData) => {
   if (!Device.isDevice) {
-    return;
+      return;
   }
 
   const token = (await Notifications.getExpoPushTokenAsync()).data;
@@ -163,14 +164,14 @@ const storePushToken = async (userData) => {
   const tokenArray = Object.values(tokenData);
 
   if (tokenArray.includes(token)) {
-    return;
+      return;
   }
 
   tokenArray.push(token);
 
   for (let i = 0; i < tokenArray.length; i++) {
-    const tok = tokenArray[i];
-    tokenData[i] = tok;
+      const tok = tokenArray[i];
+      tokenData[i] = tok;
   }
 
   const app = getFirebaseApp();
@@ -178,7 +179,7 @@ const storePushToken = async (userData) => {
   const userRef = child(dbRef, `users/${userData.uid}/pushTokens`);
 
   await set(userRef, tokenData);
-};
+}
 
 const removePushToken = async (userData) => {
   if (!Device.isDevice) {
@@ -189,18 +190,14 @@ const removePushToken = async (userData) => {
 
   const tokenData = await getUserPushTokens(userData.uid);
 
-  for (const key in tokenData) {
-    if (tokenData[key] === token) {
-      delete tokenData[key];
-      break;
-    }
-  }
+  // Remove the token from the tokenData array
+  const updatedTokenData = tokenData.filter((tok) => tok !== token);
 
   const app = getFirebaseApp();
   const dbRef = ref(getDatabase(app));
   const userRef = child(dbRef, `users/${userData.uid}/pushTokens`);
 
-  await set(userRef, tokenData);
+  await set(userRef, updatedTokenData);
 };
 
 export const getUserPushTokens = async (uid) => {
@@ -212,14 +209,16 @@ export const getUserPushTokens = async (uid) => {
     const snapshot = await get(userRef);
 
     if (!snapshot || !snapshot.exists()) {
-      return {};
+      return [];
     }
 
-    return snapshot.val() || {};
+    return snapshot.val() || [];
   } catch (error) {
     console.log(error);
+    return [];
   }
 };
+
 
 // Store user to the laravel database
 const storeUserToDatabase = async (

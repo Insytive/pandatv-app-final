@@ -19,6 +19,9 @@ import styles from "./Styles";
 import { useToast } from "react-native-toast-notifications";
 import { useDispatch, useSelector } from "react-redux";
 import { RepliesList } from "../../components/RepliesList/RepliesCard";
+import { getFirebaseApp, getDatabase, ref, child, get } from 'firebase/database';
+import { Notifications } from 'expo';
+import { useNavigation } from '@react-navigation/native';
 
 import { loveFeed, unloveFeed } from "../../store/feedsSlice";
 import { Keyboard } from "react-native";
@@ -43,6 +46,51 @@ const FeedDetailScreen = ({ route, navigation }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [replies, setReplies] = useState([]);
   const [heartsCount, setHeartsCount] = useState(feed.hearts_count);
+
+// Function to send a push notification
+const sendPushNotification = async (uid, title, body, feedId) => {
+  try {
+    // Retrieve push tokens from Firebase
+    const tokenData = await getUserPushTokens(uid);
+    const tokens = Object.values(tokenData);
+
+    // Send push notification to each token
+    for (const token of tokens) {
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: title,
+          body: body,
+          data: { feedId: feedId }, // Include feed ID in notification payload
+        },
+        to: token,
+        sound: 'default',
+      });
+    }
+
+    console.log('Push notification sent successfully');
+  } catch (error) {
+    console.error('Error sending push notification:', error);
+  }
+};
+
+
+const getUserPushTokens = async (uid) => {
+  try {
+    const app = getFirebaseApp();
+    const dbRef = ref(getDatabase(app));
+    const userRef = child(dbRef, `users/${uid}/pushTokens`);
+
+    const snapshot = await get(userRef);
+
+    if (!snapshot || !snapshot.exists()) {
+      return {};
+    }
+
+    return snapshot.val() || {};
+  } catch (error) {
+    console.log(error);
+  }
+};
 
   const sendReplyHandler = async () => {
     if (!reply.trim()) {
@@ -79,6 +127,11 @@ const FeedDetailScreen = ({ route, navigation }) => {
       setReply("");
       // Dismiss the keyboard
       Keyboard.dismiss();
+
+      // Send push notification when a reply is posted
+      const title = 'New Reply!';
+      const body = 'Someone replied to your feed.';
+      sendPushNotification(userData.uid, title, body);
     } catch (error) {
       console.error("Error sending reply:", error);
       Alert.alert("Error", "Error sending reply. Please try again later.");
@@ -97,7 +150,24 @@ const FeedDetailScreen = ({ route, navigation }) => {
     // dispatch(fetchFeeds());
   };
 
+  // const navigation = useNavigation();
+
   useEffect(() => {
+    const handleNotificationOpened = ({ data }) => {
+      if (data && data.feedId) {
+        navigation.navigate('FeedDetailScreen', { feedId: data.feedId });
+      }
+    };
+  
+    const subscription = Notifications.addNotificationResponseReceivedListener(handleNotificationOpened);
+  
+    return () => subscription.remove();
+  }, []);
+  
+
+
+  useEffect(() => {
+    
     if (isFocused) retrieveReply();
 
     setHeartsCount(feed.hearts_count);
